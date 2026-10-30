@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>N억까지 몇 년</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* 계산기: 위에 입력 줄 → 내 설정 vs 지금 규칙 두 칸 → 확률 곡선 → 시작일 점 → 돈 나가는 쪽 → 원금 반반 설명 */
+:root {
+  --bg: #f4f6f5; --paper: #ffffff; --ink: #172026; --ink2: #56636c; --ink3: #8a959d; --line: #dbe1df; --soft: #ecf0ee;
+  --me: #1f6f5c; --now: #8a959d; --hit: #1f6f5c; --miss: #c2462f; --warn: #a8720e;
+  --sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1315; --paper: #161c1f; --ink: #e7eceb; --ink2: #99a5ac; --ink3: #6b767d; --line: #283136; --soft: #1e2629;
+  --me: #5cc9a7; --now: #7d8a92; --hit: #5cc9a7; --miss: #f07a62; --warn: #e3b14c; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e1315; --paper: #161c1f; --ink: #e7eceb; --ink2: #99a5ac; --ink3: #6b767d; --line: #283136; --soft: #1e2629;
+  --me: #5cc9a7; --now: #7d8a92; --hit: #5cc9a7; --miss: #f07a62; --warn: #e3b14c; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.6; }
+.wrap { max-width: 900px; margin: 0 auto; padding-block: 22px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+h1 { font-size: 26px; margin: 0; text-wrap: balance; }
+h2 { font-size: 17px; margin: 0 0 8px; text-wrap: balance; }
+.lead { color: var(--ink2); margin: 4px 0 0; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 14px; }
+.field label { display: block; font-size: 13px; color: var(--ink2); margin-bottom: 4px; }
+.field select { font: 500 15px var(--sans) !important; }
+.field input, .field select { width: 100%; box-sizing: border-box; font: 600 17px var(--mono); color: var(--ink); background: var(--soft);
+  border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; }
+.field .hint { font-size: 12px; color: var(--ink3); margin-top: 3px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chips button { font: 500 13.5px var(--sans); color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--me); outline-offset: 2px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.res { border-radius: 12px; padding: 14px; background: var(--soft); min-width: 0; }
+.res.me { box-shadow: inset 0 0 0 2px var(--me); }
+.res .who { font-size: 13px; color: var(--ink2); }
+.res .big { font: 600 34px var(--mono); line-height: 1.2; margin: 4px 0; }
+.res .rng { font-size: 14px; color: var(--ink2); }
+.res dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 10px 0 0; font-size: 13.5px; }
+.res dt { color: var(--ink2); } .res dd { margin: 0; text-align: right; font-family: var(--mono); }
+.status { font-size: 13px; color: var(--ink3); min-height: 1.4em; }
+svg { display: block; width: 100%; height: auto; max-width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ink2); margin-top: 6px; }
+.legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+.tip { font-size: 13px; color: var(--ink2); min-height: 1.6em; margin-top: 4px; }
+.note { color: var(--ink2); font-size: 13.5px; margin: 8px 0 0; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.foot { color: var(--ink3); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>N억까지 몇 년</h1>
+    <p class="lead">v14 배포 규칙(기본 QLD 매일 · 부스터 TQQQ · NFCI · 덜어두기2 · 세금)을 과거 시작일마다 다시 굴려, 계좌가 처음 목표에 닿기까지 걸린 시간을 셉니다.</p>
+  </header>
+
+  <section class="card">
+    <div class="form">
+      <div class="field"><label for="tgt">목표 (억 원)</label><input id="tgt" type="number" min="0.5" step="0.5" value="30"></div>
+      <div class="field"><label for="ua">부스터 a배</label><input id="ua" type="number" min="0" step="1" value="20"><div class="hint">MMTW 10~19 · 낙폭 −15% 이하 날</div></div>
+      <div class="field"><label for="ub">부스터 b배</label><input id="ub" type="number" min="0" step="1" value="30"><div class="hint">MMTW 10 미만 · 낙폭 −15% 이하 날</div></div>
+      <div class="field"><label for="unit">1단위 (만 원)</label><input id="unit" type="number" min="1" step="1" value="6"><div class="hint">기본 QLD를 매 거래일 이만큼</div></div>
+      <div class="field"><label for="cap">연 상한 (만 원)</label><input id="cap" type="number" min="100" step="100" value="7000"></div>
+      <div class="field"><label for="ds">자료</label><select id="ds">
+        <option value="long">나스닥100 1985~ (합성 2·3배)</option>
+        <option value="real">QLD 실물 2006~</option>
+        <option value="dotcom">닷컴 포함 2000~ (합성)</option></select></div>
+      <div class="field"><label for="bs">계좌 기준</label><select id="bs">
+        <option value="val">평가액 (안 팔고)</option>
+        <option value="post">다 팔면 세후</option></select></div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <p class="status" id="status"></p>
+  </section>
+
+  <section class="card">
+    <h2 id="h2res">걸린 시간</h2>
+    <div class="two">
+      <div class="res me" id="rme"></div>
+      <div class="res" id="rnow"></div>
+    </div>
+    <p class="note" id="resnote"></p>
+  </section>
+
+  <section class="card">
+    <h2>몇 년 안에 닿았나</h2>
+    <svg id="cdf" viewBox="0 0 1000 380" role="img" aria-label="햇수별 목표 도달 비율"></svg>
+    <div class="legend"><span><i style="background:var(--me)"></i>내 설정</span><span><i style="background:var(--now)"></i>지금 규칙 20/30</span></div>
+    <div class="tip" id="cdftip"></div>
+    <p class="note">자료가 끝나 «아직 못 닿은» 시작일도 «적어도 그만큼은 걸림»으로 셉니다(카플란-마이어). 그래서 늦은 시작일이 많아도 숫자가 짧게 쏠리지 않아요.</p>
+  </section>
+
+  <section class="card">
+    <h2>시작일마다 (내 설정)</h2>
+    <svg id="sc" viewBox="0 0 1000 340" role="img" aria-label="시작일별 도달 햇수"></svg>
+    <div class="legend"><span>● 닿음</span><span style="color:var(--ink3)">○ 자료가 끝날 때까지 못 닿음(위치 = 그때까지 지난 햇수)</span></div>
+    <div class="tip" id="sctip"></div>
+  </section>
+
+  <section class="card">
+    <h2>돈이 나가는 쪽 (내 설정 · 자료 전체)</h2>
+    <div class="two" id="cash"></div>
+  </section>
+
+  <section class="card">
+    <h2>원금이 정말 반반이에요?</h2>
+    <ul class="plain" id="half"></ul>
+  </section>
+
+  <section class="card">
+    <h2>읽을 때 주의</h2>
+    <ul class="plain">
+      <li>시작일은 매달 첫 거래일이고 서로 기간이 겹쳐요. 독립된 표본 수가 아니라 «그때 시작했다면»의 모음이에요.</li>
+      <li>1985~ 자료는 QLD·TQQQ가 없던 시절을 실물 비용으로 맞춘 합성 2·3배로 채웠고, MMTW는 지수 20일선 거리로 만든 대용이에요. 실물 2006~ 자료는 길이가 짧아 30억 같은 큰 목표에선 끝까지 가 본 시작일이 적어요.</li>
+      <li>금액은 명목 그대로예요(물가 미반영). 1985년의 6만 원을 오늘 6만 원처럼 넣었다고 계산해요.</li>
+      <li>«평가액»은 해마다 낸 양도세는 빠졌지만 아직 안 판 차익의 세금은 안 뺀 값이에요. «다 팔면 세후»는 그날 전부 팔았을 때 남는 돈이에요.</li>
+      <li>닿은 뒤 다시 깨질 수 있어요. 처음 닿은 날만 셉니다.</li>
+    </ul>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+<script>
+/* v13·v14 엔진 자바스크립트 이식판 (2026-10-11) · 2026-10-30 계산기용: postA(날마다 다 팔면 세후)·tq·bpaid 추가(계산 순서 불변)
+ * 원본: C:\kiwoom\v13_derisk_lab.py run_ov + cmp_v13_vs_ma200.flows/Book
+ * v14 = v13 + 덜어두기2(추세+변동성) — useTV=true
+ * tax=true면 양도세(22%, 연 250만 공제, 이듬해 5월 현금→평가비중 매도 납부)와 마지막 날 «청산 세후»까지 원본과 같게 계산한다.
+ * 계산 순서까지 원본과 같게 둔다(check_engine.js가 ref.json과 1e-9로 대조).
+ */
+(function (root) {
+  "use strict";
+
+  function dayNum(s) {               // "YYYY-MM-DD" -> 1970-01-01부터 날짜 수
+    return Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 86400000;
+  }
+
+  function prep(D) {
+    if (D._prep) return D;
+    D.dn = D.dates.map(dayNum);
+    D.yr = D.dates.map(function (s) { return +s.slice(0, 4); });
+    D.mo = D.dates.map(function (s) { return +s.slice(5, 7); });
+    D._prep = true;
+    return D;
+  }
+
+  // v13 배포 규칙의 일별 납입(기본분 QLD, 부스터분 TQQQ). 연 상한은 창 시작 해부터 새로 센다
+  function flows(D, i0, i1) {
+    var K = D.k, n = i1 - i0, base = new Float64Array(n), boost = new Float64Array(n);
+    var spent = 0, cur = D.yr[i0];
+    for (var k = 0, i = i0; i < i1; k++, i++) {
+      if (D.yr[i] !== cur) { spent = 0; cur = D.yr[i]; }
+      var mv = D.mv[i];
+      var ex = D.dd[i] <= K.DD_GATE ? (mv < K.T2 ? K.U2 : (mv < K.T1 ? K.U1 : 0)) : 0;
+      var want = (1.0 + ex) * K.BASE;
+      var room = Math.max(0, K.CAP - spent);
+      var f = want <= room ? 1.0 : (want > 0 ? room / want : 0.0);
+      base[k] = K.BASE * f;
+      boost[k] = ex * K.BASE * f;
+      spent += want * f;
+    }
+    return { base: base, boost: boost };
+  }
+
+  // useTV: 덜어두기2 오버레이(=v14) · tax: 양도세 반영
+  function runV13(D, i0, i1, useTV, tax) {
+    prep(D);
+    var K = D.k, pq = D.px.QLD, pt = D.px.TQQQ, rc = D.rc, nf = D.nf, tv = D.tv;
+    var fl = flows(D, i0, i1), n = i1 - i0;
+    var sh = [0, 0], basis = [0, 0], cash = 0, gain = 0, due = 0, paid = 0;
+    var cq = 0, ct = 0, oq = 0, ot = 0;
+    var state = false, last = null, ostate = false;
+    var cur = D.yr[i0], paidMay = false;
+    var val = new Float64Array(n), amtA = new Float64Array(n), paidA = new Float64Array(n), postA = new Float64Array(n), tqA = new Float64Array(n), bpA = new Float64Array(n), qA = new Float64Array(n);
+    var boostPaid = 0;
+    var px = [0, 0];
+
+    function sell(j, amt) {
+      var v = sh[j] * px[j];
+      if (v <= 0 || amt <= 0) return 0.0;
+      amt = Math.min(amt, v);
+      var fr = amt / v;
+      var cost = basis[j] * fr;
+      sh[j] -= sh[j] * fr;
+      basis[j] -= cost;
+      cash += amt;
+      gain += amt - cost;
+      return amt;
+    }
+    function buy(j, amt) {
+      if (amt <= 0) return;
+      sh[j] += amt / px[j];
+      basis[j] += amt;
+      cash -= amt;
+    }
+    function pay() {                 // 5월 납부: 현금 먼저, 모자라면 평가비중대로 매도
+      if (due <= 0) return;
+      var p = Math.min(due, Math.max(cash, 0));
+      cash -= p;
+      var rest = due - p;
+      if (rest > 0) {
+        var h0 = sh[0] * px[0], h1 = sh[1] * px[1], tot = h0 + h1;
+        if (tot > 0) {
+          if (h0 > 0) sell(0, rest * h0 / tot);
+          if (h1 > 0) sell(1, rest * h1 / tot);
+          cash -= rest;
+        }
+      }
+      due = 0.0;
+    }
+
+    for (var k = 0, i = i0; i < i1; k++, i++) {
+      px[0] = pq[i]; px[1] = pt[i];
+      if (cash > 0) {
+        var g = 1 + rc[i];
+        cash *= g; cq *= g; ct *= g; oq *= g; ot *= g;
+      }
+      if (D.yr[i] !== cur) {
+        if (tax) due += Math.max(0.0, gain - K.DED) * K.TAX;
+        gain = 0.0;
+        cur = D.yr[i]; paidMay = false;
+      }
+      if (!paidMay && D.mo[i] >= 5 && due > 0) {
+        pay();
+        paidMay = true;
+        var bsum = cq + ct + oq + ot;
+        if (bsum > Math.max(cash, 0.0) && bsum > 0) {
+          var s = Math.max(cash, 0.0) / bsum;
+          cq *= s; ct *= s; oq *= s; ot *= s;
+        }
+      }
+      var amt = fl.base[k] + fl.boost[k];
+      cash += amt;
+      paid += amt;
+      // NFCI (배포 순서 그대로)
+      if (!state && nf[i]) {
+        if (last === null || D.dn[i] - D.dn[last] >= K.NF_COOL) {
+          cq += sell(0, sh[0] * px[0] * K.NF_RATIO);
+          ct += sell(1, sh[1] * px[1] * K.NF_RATIO);
+          state = true; last = i;
+        }
+      } else if (state && !nf[i]) {
+        buy(0, cq); buy(1, ct);
+        cq = ct = 0;
+        state = false;
+      }
+      // 덜어두기2
+      if (useTV) {
+        if (!ostate && tv[i]) {
+          oq += sell(0, sh[0] * px[0] * K.TV_RATIO);
+          ot += sell(1, sh[1] * px[1] * K.TV_RATIO);
+          ostate = true;
+        } else if (ostate && !tv[i]) {
+          buy(0, oq); buy(1, ot);
+          oq = ot = 0;
+          ostate = false;
+        }
+      }
+      buy(0, fl.base[k]);
+      buy(1, fl.boost[k]);
+      val[k] = (sh[0] * px[0] + sh[1] * px[1]) + cash;
+      amtA[k] = amt;
+      paidA[k] = paid;
+      boostPaid += fl.boost[k];
+      bpA[k] = boostPaid;                                   // 2026-10-30 계산기: TQQQ로 넣은 원금 누계
+      tqA[k] = sh[1] * px[1];                               // TQQQ 평가액
+      qA[k] = sh[0] * px[0];                                // QLD 평가액(2026-10-30 계좌 배수용)
+      var ur = Math.max(0.0, sh[0] * px[0] - basis[0]) + Math.max(0.0, sh[1] * px[1] - basis[1]);
+      postA[k] = val[k] - (tax ? ur * K.TAX : 0.0) - due;   // 그날 다 팔면 세후(그해 실현 차익 세금은 아직 안 넣음 = 마지막 날 post와 같은 정의)
+    }
+    var unreal = Math.max(0.0, sh[0] * px[0] - basis[0]) + Math.max(0.0, sh[1] * px[1] - basis[1]);
+    var post = val[n - 1] - (tax ? unreal * K.TAX : 0.0) - due;
+    return { val: val, amt: amtA, paid: paidA, post: post, postA: postA, tq: tqA, bpaid: bpA, q: qA };
+  }
+
+  // 시간가중(펀드 기준가) 지수: 첫날 1
+  function twr(val, amt) {
+    var n = val.length, idx = new Float64Array(n);
+    idx[0] = 1;
+    for (var k = 1; k < n; k++) idx[k] = idx[k - 1] * ((val[k] - amt[k]) / val[k - 1]);
+    return idx;
+  }
+
+  // 날마다 amt를 한 종목에 그냥 적립(팔지 않음)
+  function dcaSame(p, i0, amt) {
+    var n = amt.length, val = new Float64Array(n), sh = 0;
+    for (var k = 0; k < n; k++) { sh += amt[k] / p[i0 + k]; val[k] = sh * p[i0 + k]; }
+    return val;
+  }
+
+  function lump(p, i0, i1) {
+    var n = i1 - i0, out = new Float64Array(n), b = p[i0];
+    for (var k = 0; k < n; k++) out[k] = p[i0 + k] / b;
+    return out;
+  }
+
+  function mdd(arr) {
+    var pk = -Infinity, m = 0;
+    for (var k = 0; k < arr.length; k++) {
+      if (arr[k] > pk) pk = arr[k];
+      if (pk > 0) m = Math.min(m, arr[k] / pk - 1);
+    }
+    return m * 100;
+  }
+
+  // 고점 대비 낙폭 경로(%)와 최장 회복 기간(달력 일수, 끝까지 못 넘으면 끝날까지)
+  function underwater(arr, dn, i0) {
+    var n = arr.length, out = new Float64Array(n), pk = -Infinity, pkK = 0, longest = 0, ongoing = false;
+    for (var k = 0; k < n; k++) {
+      if (arr[k] >= pk) {
+        if (ongoing) longest = Math.max(longest, dn[i0 + k] - dn[i0 + pkK]);
+        pk = arr[k]; pkK = k; ongoing = false;
+      } else ongoing = true;
+      out[k] = (arr[k] / pk - 1) * 100;
+    }
+    if (ongoing) longest = Math.max(longest, dn[i0 + n - 1] - dn[i0 + pkK]);
+    return { dd: out, longest: longest };
+  }
+
+  // 돈 가중 연수익률(XIRR): 날마다 넣은 돈 amt, 마지막 날 평가액 vEnd
+  function irr(dn, i0, amt, vEnd) {
+    var n = amt.length, T = dn[i0 + n - 1];
+    function f(r) {
+      var lr = Math.log(1 + r), s = 0;
+      for (var k = 0; k < n; k++) if (amt[k] > 0) s += amt[k] * Math.exp((T - dn[i0 + k]) / 365.25 * lr);
+      return s - vEnd;
+    }
+    var lo = -0.95, hi = 10;
+    if (f(lo) > 0 || f(hi) < 0) return NaN;
+    for (var it = 0; it < 100; it++) {
+      var mid = (lo + hi) / 2;
+      if (f(mid) > 0) hi = mid; else lo = mid;
+    }
+    return (lo + hi) / 2 * 100;
+  }
+
+  var api = { prep: prep, flows: flows, runV13: runV13, twr: twr, dcaSame: dcaSame, lump: lump, mdd: mdd, underwater: underwater, irr: irr, dayNum: dayNum };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.V13E = api;
+})(this);
+
+</script>
+<script>
+/* «N억까지 몇 년» 계산 핵심 (2026-10-30 텔레그램 11104). 페이지와 node 시험이 같은 코드를 쓴다
+ * reach(D, opt): 매달 첫 거래일마다 v14를 시작해 자료 끝까지 굴리고, 계좌가 처음 목표에 닿는 날을 찾는다
+ *   opt = {target(원), a, b(부스터 단위), unit(원), cap(원/년), basis: "val"(안 팔고 평가액) | "post"(다 팔면 세후)}
+ * km(obs): 자료가 끝나 «아직 못 닿은» 시작일도 «적어도 그만큼 걸림»으로 세는 생존 분석(카플란-마이어)
+ */
+(function (root) {
+  "use strict";
+  var E = (typeof module !== "undefined" && module.exports) ? require("./engine.js") : root.V13E;
+
+  function withK(D, opt, fn) {
+    var k0 = D.k, k = {};
+    for (var key in k0) k[key] = k0[key];
+    k.U1 = opt.a; k.U2 = opt.b; k.BASE = opt.unit; k.CAP = opt.cap;
+    D.k = k;
+    try { return fn(); } finally { D.k = k0; }
+  }
+
+  function starts(D) {
+    E.prep(D);
+    var out = [], lastMo = -1;
+    for (var i = 0; i < D.dates.length; i++) {
+      if (D.mo[i] !== lastMo) { out.push(i); lastMo = D.mo[i]; }
+    }
+    return out;
+  }
+
+  function reach(D, opt, onProgress) {
+    E.prep(D);
+    var N = D.dates.length, S = starts(D), res = [];
+    return withK(D, opt, function () {
+      for (var s = 0; s < S.length; s++) {
+        var i0 = S[s];
+        if (N - i0 < 60) break;
+        var o = E.runV13(D, i0, N, true, true);
+        var arr = opt.basis === "post" ? o.postA : o.val, hit = -1;
+        for (var k = 0; k < arr.length; k++) if (arr[k] >= opt.target) { hit = k; break; }
+        var kk = hit >= 0 ? hit : arr.length - 1;
+        res.push({ i0: i0, start: D.dates[i0], hit: hit >= 0, yrs: (D.dn[i0 + kk] - D.dn[i0]) / 365.25,
+                   paid: o.paid[kk], bpaid: o.bpaid[kk], tq: o.tq[kk], q: o.q[kk], val: o.val[kk],
+                   levH: (o.q[kk] + o.tq[kk]) > 0 ? (2 * o.q[kk] + 3 * o.tq[kk]) / (o.q[kk] + o.tq[kk]) : NaN,   // 보유분 배수
+                   levA: o.val[kk] > 0 ? (2 * o.q[kk] + 3 * o.tq[kk]) / o.val[kk] : NaN });                          // 현금 포함 계좌 배수
+        if (onProgress) onProgress(s + 1, S.length);
+      }
+      return res;
+    });
+  }
+
+  function km(obs) {
+    var a = obs.slice().sort(function (x, y) { return x.yrs - y.yrs || (y.hit - x.hit); });
+    var n = a.length, S = 1, pts = [{ t: 0, cdf: 0 }], i = 0;
+    while (i < a.length) {
+      var t = a[i].yrs, d = 0, c = 0;
+      while (i < a.length && a[i].yrs === t) { if (a[i].hit) d++; else c++; i++; }
+      if (d > 0) { S *= (1 - d / n); pts.push({ t: t, cdf: 1 - S }); }
+      n -= d + c;
+    }
+    var maxT = a.length ? a[a.length - 1].yrs : 0;
+    return { pts: pts, maxT: maxT };
+  }
+
+  function q(K, p) {
+    for (var j = 0; j < K.pts.length; j++) if (K.pts[j].cdf >= p - 1e-12) return K.pts[j].t;
+    return null;                         // 자료로는 그 확률까지 못 감
+  }
+
+  function cdfAt(K, t) {
+    var c = 0;
+    for (var j = 0; j < K.pts.length; j++) { if (K.pts[j].t <= t) c = K.pts[j].cdf; else break; }
+    return c;
+  }
+
+  // 한 달 최대 지출·TQQQ 원금 몫(10년 창 중앙)·TQQQ 0원인 해 비율
+  function cashSide(D, opt) {
+    E.prep(D);
+    return withK(D, opt, function () {
+      var N = D.dates.length, f = E.flows(D, 0, N), byMo = {}, byYr = {};
+      for (var k = 0; k < N; k++) {
+        var m = D.dates[k].slice(0, 7), y = D.yr[k];
+        byMo[m] = (byMo[m] || 0) + f.base[k] + f.boost[k];
+        byYr[y] = byYr[y] || { b: 0, t: 0 };
+        byYr[y].b += f.base[k]; byYr[y].t += f.boost[k];
+      }
+      var maxMo = 0, maxM = "";
+      for (var mm in byMo) if (byMo[mm] > maxMo) { maxMo = byMo[mm]; maxM = mm; }
+      var ys = Object.keys(byYr).slice(1, -1), zero = 0, tot = [];
+      ys.forEach(function (y) { if (byYr[y].t === 0) zero++; tot.push(byYr[y].b + byYr[y].t); });
+      tot.sort(function (x, y) { return x - y; });
+      var S = starts(D), sh = [];
+      for (var s = 0; s < S.length; s++) {
+        var i0 = S[s], end = D.dn[i0] + 3652.5, i1 = i0;
+        while (i1 < N && D.dn[i1] < end) i1++;
+        if (i1 >= N) break;
+        var g = E.flows(D, i0, i1), b = 0, t = 0;
+        for (var k2 = 0; k2 < g.base.length; k2++) { b += g.base[k2]; t += g.boost[k2]; }
+        sh.push(t / (b + t));
+      }
+      sh.sort(function (x, y) { return x - y; });
+      function pct(arr, p) { return arr.length ? arr[Math.min(arr.length - 1, Math.floor(p * (arr.length - 1)))] : NaN; }
+      return { maxMo: maxMo, maxM: maxM, zeroYr: ys.length ? zero / ys.length : NaN, yrMed: pct(tot, 0.5),
+               shMed: pct(sh, 0.5), shLo: pct(sh, 0.1), shHi: pct(sh, 0.9), nWin: sh.length };
+    });
+  }
+
+  var api = { reach: reach, km: km, q: q, cdfAt: cdfAt, cashSide: cashSide, starts: starts };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.CALC = api;
+})(this);
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var DS = {}, BUILT = "2026-10-30 10:45";
+  var $ = function (id) { return document.getElementById(id); };
+  function won(v) { v = Math.round(v / 1e4); if (v >= 10000) { var r = v % 10000; return Math.floor(v / 10000) + "억" + (r ? " " + r.toLocaleString("ko-KR") + "만" : ""); } return v.toLocaleString("ko-KR") + "만"; }
+  function yrs(v) { return v == null ? "알 수 없음" : v.toFixed(1) + "년"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  var NS = "http://www.w3.org/2000/svg";
+  function el(t, a, x) { var e = document.createElementNS(NS, t); for (var k in a) e.setAttribute(k, a[k]); if (x != null) e.textContent = x; return e; }
+  function clear(s) { while (s.firstChild) s.removeChild(s.firstChild); }
+
+  var chipsT = [5, 10, 20, 30, 50, 100];
+  $("chips").innerHTML = "<span style='font-size:13px;color:var(--ink2);align-self:center'>목표 바로가기</span>" + chipsT.map(function (t) { return '<button type="button" data-t="' + t + '">' + t + "억</button>"; }).join("") +
+    "<span style='width:12px'></span><span style='font-size:13px;color:var(--ink2);align-self:center'>부스터</span>" +
+    [[10, 15], [20, 30], [40, 60]].map(function (p) { return '<button type="button" data-a="' + p[0] + '" data-b="' + p[1] + '">' + p[0] + "/" + p[1] + "</button>"; }).join("");
+  $("chips").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.t) $("tgt").value = b.dataset.t; else { $("ua").value = b.dataset.a; $("ub").value = b.dataset.b; } go(); });
+
+  function opts() {
+    var t = parseFloat($("tgt").value), a = parseFloat($("ua").value), b = parseFloat($("ub").value), u = parseFloat($("unit").value), c = parseFloat($("cap").value);
+    if (!(t > 0) || !(a >= 0) || !(b >= 0) || !(u > 0) || !(c > 0)) return null;
+    return { target: t * 1e8, a: a, b: b, unit: u * 1e4, cap: c * 1e4, basis: $("bs").value };
+  }
+  function syncChips(o) {
+    Array.prototype.forEach.call($("chips").querySelectorAll("button"), function (b) {
+      var on = b.dataset.t ? (+b.dataset.t * 1e8 === o.target) : (+b.dataset.a === o.a && +b.dataset.b === o.b);
+      b.setAttribute("aria-pressed", on ? "true" : "false"); });
+  }
+
+  function load(nm) {
+    if (DS[nm]) return Promise.resolve(DS[nm]);
+    $("status").textContent = "자료 받는 중…";
+    return fetch("data_" + nm + ".json").then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) { DS[nm] = d; return d; });
+  }
+
+  var timer = null, last = null;
+  function go() { clearTimeout(timer); timer = setTimeout(run, 120); }
+  ["tgt", "ua", "ub", "unit", "cap"].forEach(function (id) { $(id).addEventListener("input", go); });
+  ["ds", "bs"].forEach(function (id) { $(id).addEventListener("change", go); });
+
+  function summarize(D, o) {
+    var r = CALC.reach(D, o), K = CALC.km(r), hit = r.filter(function (x) { return x.hit; });
+    function med(arr) { var s = arr.slice().sort(function (x, y) { return x - y; }); return s.length ? s[Math.floor(s.length / 2)] : NaN; }
+    function pq(arr, p) { var s = arr.slice().sort(function (x, y) { return x - y; }); return s.length ? s[Math.min(s.length - 1, Math.floor(p * (s.length - 1)))] : NaN; }
+    return { r: r, K: K, n: r.length, nh: hit.length, med: CALC.q(K, 0.5), lo: CALC.q(K, 0.1), hi: CALC.q(K, 0.9),
+             paid: med(hit.map(function (x) { return x.paid; })), bsh: med(hit.map(function (x) { return x.bpaid / x.paid; })),
+             tsh: med(hit.map(function (x) { return x.tq / x.val; })), p10: CALC.cdfAt(K, 10), p15: CALC.cdfAt(K, 15),
+             levH: med(hit.map(function (x) { return x.levH; })), levA: med(hit.map(function (x) { return x.levA; })),
+             levLo: pq(hit.map(function (x) { return x.levH; }), 0.1), levHi: pq(hit.map(function (x) { return x.levH; }), 0.9) };
+  }
+
+  function card(id, title, S, o) {
+    $(id).innerHTML = '<div class="who">' + title + '</div><div class="big">' + (S.med == null ? "−" : S.med.toFixed(1) + "<span style='font-size:18px'>년</span>") + "</div>" +
+      '<div class="rng">빠른 10% ' + yrs(S.lo) + " · 늦은 10% " + yrs(S.hi) + "</div><dl>" +
+      "<dt>10년 안에 닿음</dt><dd>" + Math.round(S.p10 * 100) + "%</dd><dt>15년 안에 닿음</dt><dd>" + Math.round(S.p15 * 100) + "%</dd>" +
+      "<dt>닿을 때 넣은 원금</dt><dd>" + (isNaN(S.paid) ? "−" : won(S.paid)) + "</dd>" +
+      "<dt>그 원금 중 TQQQ</dt><dd>" + (isNaN(S.bsh) ? "−" : Math.round(S.bsh * 100) + "%") + "</dd>" +
+      "<dt>그때 계좌 중 TQQQ</dt><dd>" + (isNaN(S.tsh) ? "−" : Math.round(S.tsh * 100) + "%") + "</dd>" +
+      "<dt>그때 계좌 배수</dt><dd><b>" + (isNaN(S.levH) ? "−" : S.levH.toFixed(2) + "배") + "</b>" + (isNaN(S.levLo) ? "" : " <span style='color:var(--ink3)'>(" + S.levLo.toFixed(2) + "~" + S.levHi.toFixed(2) + ")</span>") + "</dd>" +
+      "<dt>현금까지 넣은 배수</dt><dd>" + (isNaN(S.levA) ? "−" : S.levA.toFixed(2) + "배") + "</dd>" +
+      "<dt>시작일 / 닿은 시작일</dt><dd>" + S.n + " / " + S.nh + "</dd></dl>";
+  }
+
+  function drawCdf(A, B) {
+    var svg = $("cdf"); clear(svg);
+    var W = 1000, H = 380, l = 56, r = 16, t = 14, b = 36, X = 30;
+    var x = function (v) { return l + (W - l - r) * Math.min(v, X) / X; }, y = function (p) { return t + (H - t - b) * (1 - p); };
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (p) { svg.appendChild(el("line", { x1: l, x2: W - r, y1: y(p), y2: y(p), stroke: p === 0.5 ? css("--ink3") : css("--line"), "stroke-dasharray": p === 0.5 ? "6 4" : "none" }));
+      svg.appendChild(el("text", { x: l - 8, y: y(p) + 6, "text-anchor": "end", "font-size": 18, fill: css("--ink3"), "font-family": "IBM Plex Mono, monospace" }, Math.round(p * 100) + "%")); });
+    for (var v = 0; v <= X; v += 5) svg.appendChild(el("text", { x: x(v), y: H - 10, "text-anchor": "middle", "font-size": 18, fill: css("--ink3"), "font-family": "IBM Plex Mono, monospace" }, v + "년"));
+    [[B, css("--now"), "6 5", 2.4], [A, css("--me"), "none", 3.2]].forEach(function (s) {
+      var pts = s[0].K.pts, d = "M" + x(0) + " " + y(0);
+      for (var j = 1; j < pts.length; j++) { if (pts[j].t > X) break; d += "L" + x(pts[j].t).toFixed(1) + " " + y(pts[j - 1].cdf).toFixed(1) + "L" + x(pts[j].t).toFixed(1) + " " + y(pts[j].cdf).toFixed(1); }
+      var lastT = Math.min(X, s[0].K.maxT), lastC = pts[pts.length - 1].cdf;
+      d += "L" + x(lastT).toFixed(1) + " " + y(lastC).toFixed(1);
+      svg.appendChild(el("path", { d: d, fill: "none", stroke: s[1], "stroke-width": s[3], "stroke-dasharray": s[2] }));
+      if (s[0].med != null && s[0].med <= X) svg.appendChild(el("circle", { cx: x(s[0].med), cy: y(0.5), r: 6, fill: s[1] }));
+    });
+    var hit = el("rect", { x: l, y: 0, width: W - l - r, height: H, fill: "transparent" });
+    function pick(ev) { var bb = svg.getBoundingClientRect(); var v = ((ev.clientX - bb.left) / bb.width * W - l) / (W - l - r) * X; v = Math.max(0, Math.min(X, v));
+      $("cdftip").innerHTML = "<b>" + v.toFixed(1) + "년 안에</b> 닿은 비율: 내 설정 " + Math.round(CALC.cdfAt(A.K, v) * 100) + "% · 지금 규칙 " + Math.round(CALC.cdfAt(B.K, v) * 100) + "%"; }
+    hit.addEventListener("pointermove", pick); hit.addEventListener("click", pick); svg.appendChild(hit);
+    $("cdftip").textContent = "그래프 위를 누르면 그 햇수 안에 닿은 비율이 나와요";
+  }
+
+  function drawScatter(D, A) {
+    var svg = $("sc"); clear(svg);
+    var W = 1000, H = 340, l = 56, r = 16, t = 14, b = 34, rr = A.r, Y = 30;
+    var d0 = D.dn[0], d1 = D.dn[D.dn.length - 1];
+    var x = function (dn) { return l + (W - l - r) * (dn - d0) / (d1 - d0); }, y = function (v) { return t + (H - t - b) * (1 - Math.min(v, Y) / Y); };
+    for (var v = 0; v <= Y; v += 5) { svg.appendChild(el("line", { x1: l, x2: W - r, y1: y(v), y2: y(v), stroke: css("--line") }));
+      svg.appendChild(el("text", { x: l - 8, y: y(v) + 6, "text-anchor": "end", "font-size": 18, fill: css("--ink3"), "font-family": "IBM Plex Mono, monospace" }, v + "년")); }
+    var y0 = +D.dates[0].slice(0, 4), y1 = +D.dates[D.dates.length - 1].slice(0, 4), st = (y1 - y0) > 25 ? 5 : 2;
+    for (var yr = Math.ceil(y0 / st) * st; yr <= y1; yr += st) svg.appendChild(el("text", { x: x(CALCdn(yr)), y: H - 8, "text-anchor": "middle", "font-size": 18, fill: css("--ink3"), "font-family": "IBM Plex Mono, monospace" }, yr));
+    rr.forEach(function (p) { var cx = x(D.dn[p.i0]), cy = y(p.yrs);
+      svg.appendChild(p.hit ? el("circle", { cx: cx, cy: cy, r: 3.6, fill: css("--hit") }) : el("circle", { cx: cx, cy: cy, r: 3.6, fill: "none", stroke: css("--ink3"), "stroke-width": 1.4 })); });
+    var hit = el("rect", { x: l, y: 0, width: W - l - r, height: H, fill: "transparent" });
+    function pick(ev) { var bb = svg.getBoundingClientRect(); var dn = d0 + ((ev.clientX - bb.left) / bb.width * W - l) / (W - l - r) * (d1 - d0);
+      var best = null; rr.forEach(function (p) { if (!best || Math.abs(D.dn[p.i0] - dn) < Math.abs(D.dn[best.i0] - dn)) best = p; });
+      if (best) $("sctip").innerHTML = "<b>" + best.start.slice(0, 7) + " 시작</b>: " + (best.hit ? best.yrs.toFixed(1) + "년 만에 닿음 · 그때까지 넣은 원금 " + won(best.paid) + " · 그때 계좌 배수 " + best.levH.toFixed(2) + "배" : "자료 끝까지 " + best.yrs.toFixed(1) + "년 동안 못 닿음 · 그때 계좌 " + won(best.val)); }
+    hit.addEventListener("pointermove", pick); hit.addEventListener("click", pick); svg.appendChild(hit);
+    $("sctip").textContent = "점을 누르면 그 시작일 결과가 나와요";
+  }
+  function CALCdn(yr) { return Date.UTC(yr, 0, 1) / 86400000; }
+
+  function cashCards(D, o) {
+    var c = CALC.cashSide(D, o), n = CALC.cashSide(D, { a: 20, b: 30, unit: o.unit, cap: o.cap });
+    $("cash").innerHTML =
+      '<div class="res me"><div class="who">내 설정 ' + o.a + "/" + o.b + "</div><dl>" +
+      "<dt>가장 많이 나간 한 달</dt><dd>" + won(c.maxMo) + " (" + c.maxM + ")</dd><dt>해마다 넣은 돈 (중앙)</dt><dd>" + won(c.yrMed) + "</dd>" +
+      "<dt>TQQQ를 한 번도 안 산 해</dt><dd>" + Math.round(c.zeroYr * 100) + "%</dd><dt>10년간 원금 중 TQQQ</dt><dd>" + Math.round(c.shMed * 100) + "% (" + Math.round(c.shLo * 100) + "~" + Math.round(c.shHi * 100) + ")</dd></dl></div>" +
+      '<div class="res"><div class="who">지금 규칙 20/30 (같은 1단위·상한)</div><dl>' +
+      "<dt>가장 많이 나간 한 달</dt><dd>" + won(n.maxMo) + " (" + n.maxM + ")</dd><dt>해마다 넣은 돈 (중앙)</dt><dd>" + won(n.yrMed) + "</dd>" +
+      "<dt>TQQQ를 한 번도 안 산 해</dt><dd>" + Math.round(n.zeroYr * 100) + "%</dd><dt>10년간 원금 중 TQQQ</dt><dd>" + Math.round(n.shMed * 100) + "% (" + Math.round(n.shLo * 100) + "~" + Math.round(n.shHi * 100) + ")</dd></dl></div>";
+    return { c: c, n: n };
+  }
+
+  function half(c, A, o) {
+    $("half").innerHTML = [
+      "<b>원금은 거의 반반이 맞아요(지금 20/30 기준).</b> 10년 동안 넣은 원금 중 TQQQ 몫이 가운데 " + Math.round(c.n.shMed * 100) + "%예요. 일부러 반반으로 맞춘 게 아니라 «폭락 날 비율(거래일의 약 4%) × 20~30단위 ≈ 매일 1단위»가 우연히 비슷해서예요. 부스터를 10/15로 내리면 약 36%, 40/60으로 올리면 약 66%가 돼요.",
+      "<b>넣는 때가 달라요.</b> QLD는 매일 조금씩, TQQQ는 폭락 때 몰아서 넣어요. TQQQ를 한 번도 안 산 해가 " + Math.round(c.n.zeroYr * 100) + "%이고, 산 달엔 한 달에 " + won(c.n.maxMo) + "까지 나가요.",
+      "<b>그래서 목표에 닿을 무렵 계좌 배수는 " + (isNaN(A.levH) ? "−" : A.levH.toFixed(2) + "배") + "</b>(내 설정, 가운데). 계좌 배수 = (2 × QLD 평가액 + 3 × TQQQ 평가액) ÷ 보유분. 넣는 돈 기준 배수는 2.5배 근처인데 TQQQ가 더 불어나 평가 기준이 그보다 높아요. «현금까지 넣은 배수»는 덜어두기·NFCI로 대기 중인 현금까지 분모에 넣은 값이에요.",
+      "<b>평가액은 반반이 아니에요.</b> 바닥에서 산 TQQQ가 더 불어나서 목표에 닿을 무렵 계좌 중 TQQQ는 내 설정 기준 " + (isNaN(A.tsh) ? "−" : Math.round(A.tsh * 100) + "%") + "예요. 오래 굴리면 80~97%까지 가요(«v14 TQQQ 비중 표류» 페이지)."
+    ].map(function (s) { return "<li>" + s + "</li>"; }).join("");
+  }
+
+  function run() {
+    var o = opts();
+    if (!o) { $("status").textContent = "숫자를 확인해 주세요(목표·배수·단위·상한은 0보다 커야 해요)"; return; }
+    syncChips(o);
+    var nm = $("ds").value;
+    load(nm).then(function (D) {
+      $("status").textContent = "계산 중…";
+      setTimeout(function () {
+        var t0 = performance.now();
+        var A = summarize(D, o), B = summarize(D, { target: o.target, a: 20, b: 30, unit: o.unit, cap: o.cap, basis: o.basis });
+        var tg = (o.target / 1e8);
+        $("h2res").textContent = (tg % 1 ? tg.toFixed(1) : tg) + "억까지 걸린 시간 (가운데 시작일)";
+        card("rme", "내 설정 · 부스터 " + o.a + "/" + o.b + " · 1단위 " + Math.round(o.unit / 1e4) + "만", A, o);
+        card("rnow", "지금 규칙 · 부스터 20/30 (같은 1단위·상한)", B, o);
+        var dmed = (A.med != null && B.med != null) ? A.med - B.med : null;
+        $("resnote").innerHTML = (dmed == null ? "가운데 값을 자료로 알 수 없는 쪽이 있어요(자료 끝까지 닿은 시작일이 절반이 안 됨)." :
+          (Math.abs(dmed) < 0.05 ? "내 설정과 지금 규칙의 가운데 값이 <b>같아요</b>." : "내 설정이 지금 규칙보다 가운데 기준 <b>" + (dmed < 0 ? Math.abs(dmed).toFixed(1) + "년 빨라요" : dmed.toFixed(1) + "년 늦어요") + "</b>.") + " 넣은 원금은 " + (isNaN(A.paid) || isNaN(B.paid) ? "−" : won(A.paid) + " vs " + won(B.paid)) + "이에요.") +
+          " 자료: " + esc($("ds").selectedOptions[0].textContent) + " " + D.dates[0] + " ~ " + D.dates[D.dates.length - 1] + " · 기준: " + esc($("bs").selectedOptions[0].textContent) + ".";
+        drawCdf(A, B); drawScatter(D, A);
+        var cs = cashCards(D, o);
+        half(cs, A, o);
+        last = { D: D, A: A, B: B };
+        $("status").textContent = "시작일 " + A.n + "개씩 두 번 계산 · " + Math.round(performance.now() - t0) + "ms";
+      }, 20);
+    }).catch(function (e) { $("status").textContent = "자료를 못 받았어요(" + e.message + "). 새로고침해 주세요"; });
+  }
+  $("foot").textContent = "엔진: 배포 v14 파이썬(v13_derisk_lab.run_ov)을 자바스크립트로 옮긴 것, 파이썬과 23개 기준점 오차 0(부스터 10/15·20/30·40/60 포함). 자료 " + BUILT + " · improve_map/v14_calc (calc_data.py · engine.js · calc_core.js · check_calc.js).";
+  run();
+  if (window.matchMedia) { var mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", function () { if (last) { drawCdf(last.A, last.B); drawScatter(last.D, last.A); } }); }
+})();
+</script>
+
+</body>
+</html>
