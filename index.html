@@ -623,7 +623,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
       }, 20);
     }).catch(function (e) { $("status").textContent = "자료를 못 받았어요(" + e.message + "). 새로고침해 주세요"; });
   }
-  $("foot").textContent = "엔진: 배포 v14 파이썬(v13_derisk_lab.run_ov)을 자바스크립트로 옮긴 것, 파이썬과 23개 기준점 오차 0(부스터 10/15·20/30·40/60 포함). 덜어두기·NFCI 체결은 팔 땐 시가 · 되살 땐 종가(배포 봇과 같음, 2026-11-07). 자료 " + BUILT + " · improve_map/v14_calc (calc_data.py · engine.js · calc_core.js · check_calc.js).";
+  $("foot").textContent = "엔진: 배포 v14 파이썬(v13_derisk_lab.run_ov)을 자바스크립트로 옮긴 것, 파이썬과 23개 기준점 오차 0(부스터 10/15·20/30·40/60 포함). 덜어두기·NFCI 체결은 팔 땐 시가 · 되살 땐 종가(배포 봇과 같음, 2026-11-07). 부스터는 발동일 종가로 센다(배포 봇은 그 아침 시간외 매수, 2026-11-20). 자료 " + BUILT + " · improve_map/v14_calc (calc_data.py · engine.js · calc_core.js · check_calc.js).";
   run();
   if (window.matchMedia) { var mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", function () { if (last) { drawCdf(last.A, last.B); drawScatter(last.D, last.A); } }); }
 })();
